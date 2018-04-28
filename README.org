@@ -1,0 +1,67 @@
+#+TITLE: Dissolution-DNP Polarizer at Southampton University
+
+* Project description
+Dissolution-Dynamic Nuclear Polarization (d-DNP) is a technique to enhance the nuclear magnetic reosonance (NMR) signal of small molecules / metabolites by several orders of magnitude. 
+
+Clinical and pre-clinical systems are available commercially, but are costly and cannot provide the felixibility to implement new experimental procedures.
+
+This repository contains the design of the dissolution-DNP system at Southampton University. We hope that it will become a valuable ressource for people working in the field and would be grateful for external contributions / modifications.
+
+Using Trityl and pyruvic acid, a polarization level of 18 % was achieved.
+
+Using TEMPOL and H2O/d-glycerol, a polarization level of 12 % was achieved on sodium acetate.
+
+
+* The setup at Southampton
+
+The system operates at 6.7 Tesla and uses an Oxford Instruments Spectrostat flow cryostat and a roots pump.
+
+The key components that we are using are as follows: 
+| Component                 | Manufacturer       | Approximate Price (EURO)            |
+|---------------------------+--------------------+-------------------------------------|
+| 6.7 Tesla SWB Magnet      | Bruker             | 60 k (used WB magnets are suitable) |
+| Spectrostat Flow Cryostat | Oxford Instruments | 20 k                                |
+| Roots Pump, RUVAC WAU251  | Oerlikon           | 20 k                                |
+| 188 GHz Microwave Source  | ELVA               | 20 k                                |
+| Mini NMR Spectrometer     | Magritek           | 20 k                                |
+
+
+The use of the Spectrostat Flow cryostat currently limits the temperature to above 2.1 K in continuous mode and 1.8 K in single-shot mode (hold-time approximately 45 mins). 
+
+Options for cryostats with lower base temperature are currently being explored.
+
+** Custom-built components
+
+In addition to these componets, we have designed and built various pieces of instrumentation, listed below. We will shortly add a README file to each of the corresponding folders to provide further information. The mechanical design was performed in SolidWorks. The control electronics rely on the Arduino platform, for which custom printed-circuit board (PCB) extensions, referred to as shields, have been designed in Eagle. The radio-frequency design has been simulated in Python. The project is documented using Emacs org-mode. 
+
+*** DNP insert and CryoShield
+The dnp insert allows to irradiate the sample with microwaves at low temperatures down to 1.6K and measure its polarization by NMR. It also hosts a set of Allen-Bradley resistors attached to a custom-built controller/shield. This shield applies 5V pulses to the resistors and measures their resistance as function of time immediately after the pulse. Currently our insert is equipped with coils for 13C and 1H. The coils are roughly tuned and matched with ATC700B chip capacitors, fine tuning is done at room temperatures using an L-Network of Jennings capacitors 1.5 - 45 pF, and optionally coaxial line stretchers (trombone lines) by Microlab.
+
+*** Dissolution Wand and Controller
+The controller for the dissolution wand comprises a 220 V to 110 V transformer, whose output can be connected to a mineral barrel heater on the dissolution wand. It also hosts a custom shield that measures the temperature and pressure within the dissolution wand via simple voltage dividers. Finally the controller hosts a relay board to control the various (pilot) valves in the system, including those that drive the dissolution. 
+
+*** Magnetic Tunnel
+Following dissolution the solute is flushed to our 500 MHz liquid-state NMR magnet via a magnetic tunnel to reduce low-field relaxation. 
+
+*** Injector
+An injector has been designed to fit into our 500 MHz magnet. 
+
+*** Arbitrary Waveform Generator
+An arbitrary waveform generator providing an output of up to 24 V has been designed to allow sweeps of the microwave source. We are not using it routinely at the moment, though it is fully functional. 
+This device is based on an Arduino Due.
+
+* Procedures
+** Sample preparation
+More detailed procedures will be in the sample preparation folder.
+
+** Probe tuning
+We use an Agilent FieldFox Network Analyser to tune and match our probes. More details will be published soon.
+
+* Acknowledgement
+We would like to thank Sami Jannin, Jonas Milani, Jan Hendrik Ardenkjaer-Larsen, Arnaud Comment and Jacques van der Klink for discussions and advice.
+
+
+* License
+#+BEGIN_HTML
+<a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.
+#+END_HTML
