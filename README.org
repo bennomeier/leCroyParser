@@ -1,67 +1,78 @@
-#+TITLE: Dissolution-DNP Polarizer at Southampton University
+#+Title: leCroyParser.py
 
-* Project description
-Dissolution-Dynamic Nuclear Polarization (d-DNP) is a technique to enhance the nuclear magnetic reosonance (NMR) signal of small molecules / metabolites by several orders of magnitude. 
+leCroyParser parses binary files as written by LeCroy scopes.
 
-Clinical and pre-clinical systems are available commercially, but are costly and cannot provide the felixibility to implement new experimental procedures.
+leCroyParser.py is derived from the matlab programme ReadLeCroyBinaryWaveform.m,
+available at https://www.mathworks.com/matlabcentral/fileexchange/26375-readlecroybinarywaveform-m
 
-This repository contains the design of the dissolution-DNP system at Southampton University. We hope that it will become a valuable ressource for people working in the field and would be grateful for external contributions / modifications.
-
-Using Trityl and pyruvic acid, a polarization level of 18 % was achieved.
-
-Using TEMPOL and H2O/d-glycerol, a polarization level of 12 % was achieved on sodium acetate.
+A useful resource for modifications is the LeCroy Remote Control Manual
+available at http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf
 
 
-* The setup at Southampton
 
-The system operates at 6.7 Tesla and uses an Oxford Instruments Spectrostat flow cryostat and a roots pump.
+* Usage
+To import a single trace, instantiate a ScopeData object by passing it a path, i.e.
 
-The key components that we are using are as follows: 
-| Component                 | Manufacturer       | Approximate Price (EURO)            |
-|---------------------------+--------------------+-------------------------------------|
-| 6.7 Tesla SWB Magnet      | Bruker             | 60 k (used WB magnets are suitable) |
-| Spectrostat Flow Cryostat | Oxford Instruments | 20 k                                |
-| Roots Pump, RUVAC WAU251  | Oerlikon           | 20 k                                |
-| 188 GHz Microwave Source  | ELVA               | 20 k                                |
-| Mini NMR Spectrometer     | Magritek           | 20 k                                |
+#+begin_src python
+path = "/home/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421_typicalShot00000.trc"
+data = ScopeData(path)
+#+end_src
 
+The x and y data are stored as numpy arrays in data.x and data.y
 
-The use of the Spectrostat Flow cryostat currently limits the temperature to above 2.1 K in continuous mode and 1.8 K in single-shot mode (hold-time approximately 45 mins). 
+Alternatively, to parse several channels set the optional keyword argument parseAll to True, i.e.
+#+begin_src python
+data = ScopeData(path, parseAll = True)
+#+end_src 
+This will parse all files in the specified folder with a matching filename. I.e., if the provided path is as above, then
+the files 
 
-Options for cryostats with lower base temperature are currently being explored.
+#+begin_src python
+C2180421_typicalShot00000.trc
+C3180421_typicalShot00000.trc
+C4180421_typicalShot00000.trc
+#+end_src
+will pe parsed as well.
 
-** Custom-built components
+Information about the file can be obtained by calling print(data)
+#+begin_src python
+print(data)
 
-In addition to these componets, we have designed and built various pieces of instrumentation, listed below. We will shortly add a README file to each of the corresponding folders to provide further information. The mechanical design was performed in SolidWorks. The control electronics rely on the Arduino platform, for which custom printed-circuit board (PCB) extensions, referred to as shields, have been designed in Eagle. The radio-frequency design has been simulated in Python. The project is documented using Emacs org-mode. 
-
-*** DNP insert and CryoShield
-The dnp insert allows to irradiate the sample with microwaves at low temperatures down to 1.6K and measure its polarization by NMR. It also hosts a set of Allen-Bradley resistors attached to a custom-built controller/shield. This shield applies 5V pulses to the resistors and measures their resistance as function of time immediately after the pulse. Currently our insert is equipped with coils for 13C and 1H. The coils are roughly tuned and matched with ATC700B chip capacitors, fine tuning is done at room temperatures using an L-Network of Jennings capacitors 1.5 - 45 pF, and optionally coaxial line stretchers (trombone lines) by Microlab.
-
-*** Dissolution Wand and Controller
-The controller for the dissolution wand comprises a 220 V to 110 V transformer, whose output can be connected to a mineral barrel heater on the dissolution wand. It also hosts a custom shield that measures the temperature and pressure within the dissolution wand via simple voltage dividers. Finally the controller hosts a relay board to control the various (pilot) valves in the system, including those that drive the dissolution. 
-
-*** Magnetic Tunnel
-Following dissolution the solute is flushed to our 500 MHz liquid-state NMR magnet via a magnetic tunnel to reduce low-field relaxation. 
-
-*** Injector
-An injector has been designed to fit into our 500 MHz magnet. 
-
-*** Arbitrary Waveform Generator
-An arbitrary waveform generator providing an output of up to 24 V has been designed to allow sweeps of the microwave source. We are not using it routinely at the moment, though it is fully functional. 
-This device is based on an Arduino Due.
-
-* Procedures
-** Sample preparation
-More detailed procedures will be in the sample preparation folder.
-
-** Probe tuning
-We use an Agilent FieldFox Network Analyser to tune and match our probes. More details will be published soon.
-
-* Acknowledgement
-We would like to thank Sami Jannin, Jonas Milani, Jan Hendrik Ardenkjaer-Larsen, Arnaud Comment and Jacques van der Klink for discussions and advice.
-
+Le Croy Scope Data
+Path: /Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/
+201804/C1180421_typicalShot00000.trc                              
+Endianness: <
+Instrument: LECROYHDO4104
+Instrunemt Number: 19359
+Template Name: LECROY_2_3
+Channel: Channel 4
+Vertical Coupling: DC1M
+Bandwidth Limit: on
+Record Type: single_sweep
+Processing: No Processing
+TimeBase: 200 ms/div
+TriggerTime: 2018-04-21 11:50:45.76
+#+end_src
 
 * License
-#+BEGIN_HTML
-<a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/3.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-ShareAlike 3.0 Unported License</a>.
-#+END_HTML
+MIT License
+
+Copyright (c) [year] [fullname]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
