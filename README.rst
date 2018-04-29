@@ -1,4 +1,5 @@
-# leCroyParser
+lecroyparser
+---
 
 leCroyParser.py parses binary files as written by LeCroy scopes.
 
@@ -13,73 +14,70 @@ A useful resource for modifications is the LeCroy Remote Control Manual
 available at
 <http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf>
 
-# Installation
+Installation
+----
 
 lecroyparser is available at pip. It may be installed
 with
 
-```
 >>> pip install lecroyparser
-```
+
 or with
 
-```
->>> easy_install lecroyparser
-```
 
-# Usage
+>>> easy_install lecroyparser
+
+Usage
+----
 
 To import a single trace, instantiate a ScopeData object by passing it a
 path, i.e.
 
-```
 >>> import lecroyparser
 >>> path = "/home/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421_typicalShot00000.trc"
 >>> data = lecroyparser.ScopeData(path)
-```
+
 
 The x and y data are stored as numpy arrays in data.x and data.y
 
 Alternatively, to parse several channels set the optional keyword
 argument parseAll to True, i.e.
 
-```
 >>> data = lecroyparser.ScopeData(path, parseAll = True)
-```
 
 This will parse all files in the specified folder with a matching
 filename. I.e., if the provided path is as above, then the files
 
-```
+.. code-block:: console
+   C2180421_typicalShot00000.trc
+   C3180421_typicalShot00000.trc
+   C4180421_typicalShot00000.trc
 
-C2180421_typicalShot00000.trc
-C3180421_typicalShot00000.trc
-C4180421_typicalShot00000.trc
-```
 
 will pe parsed as well.
 
 Information about the file can be obtained by calling print(data)
 
-```
->>> print(data)
+.. code-block:: console
+    >>> print(data)
+    
+    Le Croy Scope Data
+    Path: /Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421\_typicalShot00000.trc
+    Endianness: <
+    Instrument: LECROYHDO4104
+    Instrunemt Number: 19359
+    Template Name: LECROY\_2\_3
+    Channel: Channel 4
+    Vertical Coupling: DC1M
+    Bandwidth Limit: on
+    Record Type: single\_sweep
+    Processing: No Processing &gt;&gt;&gt; TimeBase: 200 ms/div
+    TriggerTime: 2018-04-21 11:50:45.76
 
-Le Croy Scope Data
-Path: /Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421\_typicalShot00000.trc
-Endianness: <
-Instrument: LECROYHDO4104
-Instrunemt Number: 19359
-Template Name: LECROY\_2\_3
-Channel: Channel 4
-Vertical Coupling: DC1M
-Bandwidth Limit: on
-Record Type: single\_sweep
-Processing: No Processing &gt;&gt;&gt; TimeBase: 200 ms/div
-TriggerTime: 2018-04-21 11:50:45.76
-```
 
 
-# License
+License
+----
 
 MIT License
 

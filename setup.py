@@ -1,10 +1,10 @@
 from setuptools import setup
 
-with open('README.md') as f:
+with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='lecroyparser',
-      version='1.01',
+      version='1.21',
       description='Parse LeCroy Binary Files.',
       long_description=long_description,
       long_description_content_type='text/markdown',

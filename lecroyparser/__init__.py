@@ -19,11 +19,15 @@ import glob
 path = "/Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421_typicalShot00000.trc"
 
 class ScopeData(object):
-    def __init__(self, path, parseAll = False):
+    def __init__(self, path, parseAll = False, sparse = -1):
         """Import Scopedata as stored under path.
 
         If parseAll is set to true, search for all files 
-        in the folder commencing with C1...Cx and store the y data in a list."""
+        in the folder commencing with C1...Cx and store the y data in a list.
+
+        If a positive value is provided for sparce, then only #sparse elements will be stored in x and y.
+
+        This can speed up data processing and plotting."""
         self.path = path
 
         if parseAll:
@@ -34,12 +38,12 @@ class ScopeData(object):
 
             self.y = []
             for f in files:
-                x, y = self.parseFile(f)
+                x, y = self.parseFile(f, sparse = sparse)
                 self.x = x
                 self.y.append(y)
                 
         else:
-            x, y = self.parseFile(path)
+            x, y = self.parseFile(path, sparse = sparse)
             self.x = x
             self.y = y
 
@@ -116,6 +120,12 @@ class ScopeData(object):
         x = np.linspace(0, self.waveArrayCount*self.horizInterval,
                              num = self.waveArrayCount) + self.horizOffset
         
+        if sparse > 0:
+            indices = len(x) / sparse * np.arange(sparse)
+
+            x = x[indices]
+            y = y[indices]
+
         self.file.close()
         return x, y
 
