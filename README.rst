@@ -1,5 +1,5 @@
 lecroyparser
----
+============
 
 leCroyParser.py parses binary files as written by LeCroy scopes.
 
@@ -10,12 +10,16 @@ Original version (c)2001 Hochschule fr Technik+Architektur Luzern
 Fachstelle Elektronik 6048 Horw, Switzerland Slightly modified by Alan
 Blankman, LeCroy Corporation, 2006
 
+Further elements for the code were taken from pylecroy, written by Steve Bian
+
 A useful resource for modifications is the LeCroy Remote Control Manual
 available at
 <http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf>
 
+Lecroyparser has been tested with Python 2.7 and Python 3.6
+
 Installation
-----
+------------
 
 lecroyparser is available at pip. It may be installed
 with
@@ -28,7 +32,7 @@ or with
 >>> easy_install lecroyparser
 
 Usage
-----
+-----
 
 To import a single trace, instantiate a ScopeData object by passing it a
 path, i.e.
@@ -56,6 +60,12 @@ filename. I.e., if the provided path is as above, then the files
 
 will pe parsed as well.
 
+Additionally, it is possible to limit the number of samples in the output array, by overwritting the sparse keyword:
+
+>>> data = lecroyparser.ScopeData(path, parseAll = True, sparse = 1000)
+
+will limit the samples in the x and y dimensions to 1000.
+
 Information about the file can be obtained by calling print(data)
 
 .. code-block:: console
@@ -77,7 +87,7 @@ Information about the file can be obtained by calling print(data)
 
 
 License
-----
+-------
 
 MIT License
 

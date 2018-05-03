@@ -1,22 +1,26 @@
-# leCroyParser.py
-# (c) Benno Meier, 2018
-# and published under an MIT license.
-#
-# leCroyParser.py is derived from the matlab programme ReadLeCroyBinaryWaveform.m,
-# which is available at Matlab Central.
-# a useful resource for modifications is the LeCroy Remote Control Manual
-# available at http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf
-#------------------------------------------------------
-# Original version (c)2001 Hochschule fr Technik+Architektur Luzern
-# Fachstelle Elektronik
-# 6048 Horw, Switzerland
-# Slightly modified by Alan Blankman, LeCroy Corporation, 2006
+""" leCroyParser.py
+(c) Benno Meier, 2018 published under an MIT license.
 
-import struct
+leCroyParser.py is derived from the matlab programme ReadLeCroyBinaryWaveform.m,
+which is available at Matlab Central.
+a useful resource for modifications is the LeCroy Remote Control Manual
+available at http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf
+------------------------------------------------------
+Original version (c)2001 Hochschule fr Technik+Architektur Luzern
+Fachstelle Elektronik
+6048 Horw, Switzerland
+Slightly modified by Alan Blankman, LeCroy Corporation, 2006
+
+Further elements for the code were taken from pylecroy, written by Steve Bian
+
+lecroyparser defines the ScopeData object.
+Tested in Python 2.7 and Python 3.6
+"""
+
+import sys
 import numpy as np
 import glob
 
-path = "/Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421_typicalShot00000.trc"
 
 class ScopeData(object):
     def __init__(self, path, parseAll = False, sparse = -1):
@@ -25,9 +29,11 @@ class ScopeData(object):
         If parseAll is set to true, search for all files 
         in the folder commencing with C1...Cx and store the y data in a list.
 
-        If a positive value is provided for sparce, then only #sparse elements will be stored in x and y.
+        If a positive value is provided for sparse, then only #sparse elements will 
+        be stored in x and y. These will be sampled evenly from all data points in 
+        the source file. This can speed up data processing and plotting."""
 
-        This can speed up data processing and plotting."""
+        
         self.path = path
 
         if parseAll:
@@ -48,7 +54,7 @@ class ScopeData(object):
             self.y = y
 
         
-    def parseFile(self, path):
+    def parseFile(self, path, sparse = -1):
         self.file = open(path, mode='rb')
         self.endianness = "<"
         
@@ -65,7 +71,7 @@ class ScopeData(object):
         
         #convert the first 50 bytes to a string to find position of substring WAVEDESC
         self.posWAVEDESC = fileContent[:50].decode("ascii").index("WAVEDESC")
-
+        
         self.commOrder = self.parseInt16(34) #big endian (>) if 0, else little
         self.endianness = [">", "<"][self.commOrder]
         
@@ -108,11 +114,10 @@ class ScopeData(object):
                        + self.trigTimeArray)
 
         if self.commType == 0: #data is stored in 8bit integers
-            y = struct.unpack("b"*(self.waveArray1/2),
-                                   self.file.read(self.waveArray1))
+            y = np.fromstring(self.file.read(self.waveArray1), dtype = np.dtype((self.endianness + "i1", self.waveArray1)))[0]
         else: #16 bit integers
-            y = struct.unpack("h"*(self.waveArray1/2),
-                                   self.file.read(self.waveArray1))
+            length = self.waveArray1//2
+            y = np.fromstring(self.file.read(self.waveArray1), dtype = np.dtype((self.endianness + "i2", length)))[0]
 
         #now scale the ADC values
         y = self.verticalGain*np.array(y) - self.verticalOffset
@@ -121,12 +126,12 @@ class ScopeData(object):
                              num = self.waveArrayCount) + self.horizOffset
         
         if sparse > 0:
-            indices = len(x) / sparse * np.arange(sparse)
+            indices = int(len(x) / sparse) * np.arange(sparse)
 
             x = x[indices]
             y = y[indices]
 
-        self.file.close()
+            self.file.close()
         return x, y
 
         
@@ -135,27 +140,44 @@ class ScopeData(object):
         in a given position in the file, with correct endianness, and returns the parsed
         data as a tuple, according to the format specifier. """
         self.file.seek(pos + self.posWAVEDESC)
-        return struct.unpack(self.endianness + formatSpecifier, self.file.read(length))
+        x = np.fromstring(self.file.read(length), self.endianness + formatSpecifier)[0]
+        return x
     
         
-    def parseString(self, pos):
-        return "".join(self.unpack(pos, 'c'*16, 16))
+    def parseString(self, pos, length = 16):
+        s = self.unpack(pos, "S{}".format(length), length)
+        if sys.version_info > (3, 0):
+            s = s.decode('ascii')
+        return s
+
+    #return "".join(map(chr, self.unpack(pos, 's'*16, 16)))
 
     def parseInt16(self, pos):
-        return self.unpack(pos, "h", 2)[0]
+        return self.unpack(pos, "u2", 2)
+
+    def parseWord(self, pos):
+        return self.unpack(pos, "i2", 2)
 
     def parseInt32(self, pos):
-        return self.unpack(pos, "i", 4)[0]
+        return self.unpack(pos, "i4", 4)
 
     def parseFloat(self, pos):
-        return self.unpack(pos, "f", 4)[0]
+        return self.unpack(pos, "f4", 4)
 
     def parseDouble(self, pos):
-        return self.unpack(pos, "d", 8)[0]
+        return self.unpack(pos, "f8", 8)
+
+    def parseByte(self, pos):
+        return self.unpack(pos, "u1", 1)
 
     def parseTimeStamp(self, pos):
-        [second, minute, hour, day, month, year] = self.unpack(pos, "dbbbbh", 14)
-
+        second = self.parseDouble(pos)
+        minute = self.parseByte(pos + 8)
+        hour = self.parseByte(pos + 9)
+        day = self.parseByte(pos + 10)
+        month = self.parseByte(pos + 11)
+        year = self.parseWord(pos + 12)
+        
         return "{}-{:02d}-{:02d} {:02d}:{:02d}:{:.2f}".format(year, month, day,
                                                               hour, minute, second)
 
@@ -168,7 +190,7 @@ class ScopeData(object):
         timeBaseNumber = self.parseInt16(pos)
 
         if timeBaseNumber < 48:
-            unit = "pnum k"[timeBaseNumber/9]
+            unit = "pnum k"[int(timeBaseNumber/9)]
             value = [1, 2, 5, 10, 20, 50, 100, 200, 500][timeBaseNumber % 9]
             return "{} ".format(value) + unit.strip() + "s/div"
         elif timeBaseNumber == 100:
