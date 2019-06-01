@@ -1,7 +1,6 @@
 lecroyparser
 ============
 
-@@ Reto - I received your email but the outlook.com email address does reject my response message. Can you please raise your question as an Issue?
 
 leCroyParser.py parses binary files as written by LeCroy scopes.
 
