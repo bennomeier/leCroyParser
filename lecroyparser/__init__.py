@@ -70,7 +70,7 @@ class ScopeData(object):
                           "autoscaled", "no_resulst", "rolling", "cumulative"]
         
         #convert the first 50 bytes to a string to find position of substring WAVEDESC
-        self.posWAVEDESC = fileContent[:50].decode("ascii").index("WAVEDESC")
+        self.posWAVEDESC = fileContent[:50].decode("ascii","replace").index("WAVEDESC")
         
         self.commOrder = self.parseInt16(34) #big endian (>) if 0, else little
         self.endianness = [">", "<"][self.commOrder]
