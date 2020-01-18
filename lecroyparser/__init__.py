@@ -131,7 +131,7 @@ class ScopeData(object):
             x = x[indices]
             y = y[indices]
 
-            self.file.close()
+        self.file.close()
         return x, y
 
         
