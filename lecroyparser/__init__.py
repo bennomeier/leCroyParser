@@ -132,6 +132,7 @@ class ScopeData(object):
             y = y[indices]
 
         self.file.close()
+        del self.file
         return x, y
 
         
