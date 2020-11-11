@@ -131,10 +131,10 @@ class ScopeData(object):
 
         start = self.posWAVEDESC + self.waveDescriptor + self.userText + self.trigTimeArray
         if self.commType == 0:  # data is stored in 8bit integers
-            y = np.fromstring(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i1", self.waveArray1)))[0]
+            y = np.frombuffer(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i1", self.waveArray1)))[0]
         else:  # 16 bit integers
             length = self.waveArray1 // 2
-            y = np.fromstring(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i2", length)))[0]
+            y = np.frombuffer(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i2", length)))[0]
 
         # now scale the ADC values
         y = self.verticalGain * np.array(y) - self.verticalOffset
@@ -155,7 +155,7 @@ class ScopeData(object):
         in a given position in the file, with correct endianness, and returns the parsed
         data as a tuple, according to the format specifier. """
         start = pos + self.posWAVEDESC
-        x = np.fromstring(self.data[start:start + length], self.endianness + formatSpecifier)[0]
+        x = np.frombuffer(self.data[start:start + length], self.endianness + formatSpecifier)[0]
         return x
 
     def parseString(self, pos, length=16):
@@ -163,8 +163,6 @@ class ScopeData(object):
         if sys.version_info > (3, 0):
             s = s.decode('ascii')
         return s
-
-    # return "".join(map(chr, self.unpack(pos, 's'*16, 16)))
 
     def parseInt16(self, pos):
         return self.unpack(pos, "u2", 2)
