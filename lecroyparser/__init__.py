@@ -25,44 +25,60 @@ import glob
 
 
 class ScopeData(object):
-    def __init__(self, path, parseAll = False, sparse = -1):
+    def __init__(self, path=None, data=None, parseAll=False, sparse=-1):
         """Import Scopedata as stored under path.
 
         If parseAll is set to true, search for all files 
         in the folder commencing with C1...Cx and store the y data in a list.
 
         If a positive value is provided for sparse, then only #sparse elements will 
-        be stored in x and y. These will be sampled evenly from all data points in 
+        be stored in x and y. These will be sampled evenly from all data points in
         the source file. This can speed up data processing and plotting."""
 
-        
-        self.path = path
+        if path:
+            if data:
+                raise Exception('Both data and path supplied. Choose either one.')
 
-        if parseAll:
-            basePath = "/".join(path.split("/")[:-1])
-            core_filename = path.split("/")[-1][2:]
+            self.path = path
 
-            files = sorted(list( glob.iglob(basePath + "/C*" + core_filename)))
+            if parseAll:
+                basePath = "/".join(path.split("/")[:-1])
+                core_filename = path.split("/")[-1][2:]
 
-            self.y = []
-            for f in files:
-                x, y = self.parseFile(f, sparse = sparse)
+                files = sorted(list(glob.iglob(basePath + "/C*" + core_filename)))
+
+                self.y = []
+                for f in files:
+                    x, y = self.parseFile(f, sparse=sparse)
+                    self.x = x
+                    self.y.append(y)
+
+            else:
+                x, y = self.parseFile(path, sparse=sparse)
                 self.x = x
-                self.y.append(y)
-                
-        else:
-            x, y = self.parseFile(path, sparse = sparse)
-            self.x = x
-            self.y = y
+                self.y = y
+        elif data:
+            if path:
+                raise Exception('Both data and path supplied. Choose either one.')
+            if parseAll:
+                raise Exception('parseAll option is not available using data input')
 
-    def parseFile(self, path, sparse = -1):
+            assert type(data) == bytes, 'Please supply data as bytes'
+
+            self.x, self.y = self.parseData(data, sparse)
+
+    def parseFile(self, path, sparse=-1):
         self.file = open(path, mode='rb')
         self.endianness = "<"
-        
-        self.fileContent = self.file.read()
+
+        fileContent = self.file.read()
 
         self.file.close()
         del self.file
+        return self.parseData(data=fileContent, sparse=sparse)
+
+    def parseData(self, data, sparse):
+        self.data = data
 
         waveSourceList = ["Channel 1", "Channel 2", "Channel 3", "Channel 4", "Unknown"]
         verticalCouplingList = ["DC50", "GND", "DC1M", "GND", "AC1M"]
@@ -73,15 +89,14 @@ class ScopeData(object):
         processingList = ["No Processing", "FIR Filter", "interpolated", "sparsed",
                           "autoscaled", "no_resulst", "rolling", "cumulative"]
 
-        #convert the first 50 bytes to a string to find position of substring WAVEDESC
-        self.posWAVEDESC = self.fileContent[:50].decode("ascii","replace").index("WAVEDESC")
+        # convert the first 50 bytes to a string to find position of substring WAVEDESC
+        self.posWAVEDESC = self.data[:50].decode("ascii", "replace").index("WAVEDESC")
 
-        self.commOrder = self.parseInt16(34) #big endian (>) if 0, else little
+        self.commOrder = self.parseInt16(34)  # big endian (>) if 0, else little
         self.endianness = [">", "<"][self.commOrder]
 
         self.templateName = self.parseString(16)
-        self.commType = self.parseInt16(32) # encodes whether data is stored as 8 or 16bit
-
+        self.commType = self.parseInt16(32)  # encodes whether data is stored as 8 or 16bit
 
         self.waveDescriptor = self.parseInt32(36)
         self.userText = self.parseInt32(40)
@@ -113,19 +128,18 @@ class ScopeData(object):
         self.bandwidthLimit = bandwidthLimitList[self.parseInt16(334)]
         self.waveSource = waveSourceList[self.parseInt16(344)]
 
-
         start = self.posWAVEDESC + self.waveDescriptor + self.userText + self.trigTimeArray
-        if self.commType == 0: #data is stored in 8bit integers
-            y = np.fromstring(self.fileContent[start:start+self.waveArray1], dtype = np.dtype((self.endianness + "i1", self.waveArray1)))[0]
-        else: #16 bit integers
-            length = self.waveArray1//2
-            y = np.fromstring(self.fileContent[start:start+self.waveArray1], dtype = np.dtype((self.endianness + "i2", length)))[0]
+        if self.commType == 0:  # data is stored in 8bit integers
+            y = np.fromstring(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i1", self.waveArray1)))[0]
+        else:  # 16 bit integers
+            length = self.waveArray1 // 2
+            y = np.fromstring(self.data[start:start + self.waveArray1], dtype=np.dtype((self.endianness + "i2", length)))[0]
 
-        #now scale the ADC values
-        y = self.verticalGain*np.array(y) - self.verticalOffset
+        # now scale the ADC values
+        y = self.verticalGain * np.array(y) - self.verticalOffset
 
-        x = np.linspace(0, self.waveArrayCount*self.horizInterval,
-                             num = self.waveArrayCount) + self.horizOffset
+        x = np.linspace(0, self.waveArrayCount * self.horizInterval,
+                        num=self.waveArrayCount) + self.horizOffset
 
         if sparse > 0:
             indices = int(len(x) / sparse) * np.arange(sparse)
@@ -135,23 +149,21 @@ class ScopeData(object):
 
         return x, y
 
-
     def unpack(self, pos, formatSpecifier, length):
         """ a wrapper that reads binary data
         in a given position in the file, with correct endianness, and returns the parsed
         data as a tuple, according to the format specifier. """
-        start = pos+self.posWAVEDESC
-        x = np.fromstring(self.fileContent[start:start+length], self.endianness + formatSpecifier)[0]
+        start = pos + self.posWAVEDESC
+        x = np.fromstring(self.data[start:start + length], self.endianness + formatSpecifier)[0]
         return x
-    
-        
-    def parseString(self, pos, length = 16):
+
+    def parseString(self, pos, length=16):
         s = self.unpack(pos, "S{}".format(length), length)
         if sys.version_info > (3, 0):
             s = s.decode('ascii')
         return s
 
-    #return "".join(map(chr, self.unpack(pos, 's'*16, 16)))
+    # return "".join(map(chr, self.unpack(pos, 's'*16, 16)))
 
     def parseInt16(self, pos):
         return self.unpack(pos, "u2", 2)
@@ -178,7 +190,7 @@ class ScopeData(object):
         day = self.parseByte(pos + 10)
         month = self.parseByte(pos + 11)
         year = self.parseWord(pos + 12)
-        
+
         return "{}-{:02d}-{:02d} {:02d}:{:02d}:{:.2f}".format(year, month, day,
                                                               hour, minute, second)
 
@@ -191,12 +203,12 @@ class ScopeData(object):
         timeBaseNumber = self.parseInt16(pos)
 
         if timeBaseNumber < 48:
-            unit = "pnum k"[int(timeBaseNumber/9)]
+            unit = "pnum k"[int(timeBaseNumber / 9)]
             value = [1, 2, 5, 10, 20, 50, 100, 200, 500][timeBaseNumber % 9]
             return "{} ".format(value) + unit.strip() + "s/div"
         elif timeBaseNumber == 100:
             return "EXTERNAL"
-           
+
     def __repr__(self):
         string = "Le Croy Scope Data\n"
         string += "Path: " + self.path + "\n"
@@ -212,13 +224,9 @@ class ScopeData(object):
         string += "Processing: " + self.processingDone + "\n"
         string += "TimeBase: " + self.timeBase + "\n"
         string += "TriggerTime: " + self.triggerTime + "\n"
-        
+
         return string
 
 
-
-
-
 if __name__ == "__main__":
-    data = ScopeData(path, parseAll = True)
-
+    data = ScopeData(path, parseAll=True)
