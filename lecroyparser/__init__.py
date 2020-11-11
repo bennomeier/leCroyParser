@@ -64,12 +64,11 @@ class ScopeData(object):
                 raise Exception('parseAll option is not available using data input')
 
             assert type(data) == bytes, 'Please supply data as bytes'
-
+            self.path = 'None - from bytes data'  # not reading from a path
             self.x, self.y = self.parseData(data, sparse)
 
     def parseFile(self, path, sparse=-1):
         self.file = open(path, mode='rb')
-        self.endianness = "<"
 
         fileContent = self.file.read()
 
@@ -79,6 +78,8 @@ class ScopeData(object):
 
     def parseData(self, data, sparse):
         self.data = data
+
+        self.endianness = "<"
 
         waveSourceList = ["Channel 1", "Channel 2", "Channel 3", "Channel 4", "Unknown"]
         verticalCouplingList = ["DC50", "GND", "DC1M", "GND", "AC1M"]
