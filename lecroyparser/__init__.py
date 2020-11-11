@@ -15,6 +15,8 @@ Further elements for the code were taken from pylecroy, written by Steve Bian
 
 lecroyparser defines the ScopeData object.
 Tested in Python 2.7 and Python 3.6
+
+Updated 2020 Jeroen van Oorschot, Eindhoven University of Technology
 """
 
 import sys
@@ -53,12 +55,14 @@ class ScopeData(object):
             self.x = x
             self.y = y
 
-        
     def parseFile(self, path, sparse = -1):
         self.file = open(path, mode='rb')
         self.endianness = "<"
         
-        fileContent = self.file.read()
+        self.fileContent = self.file.read()
+
+        self.file.close()
+        del self.file
 
         waveSourceList = ["Channel 1", "Channel 2", "Channel 3", "Channel 4", "Unknown"]
         verticalCouplingList = ["DC50", "GND", "DC1M", "GND", "AC1M"]
@@ -68,13 +72,13 @@ class ScopeData(object):
                           "centered_RIS", "peak_detect"]
         processingList = ["No Processing", "FIR Filter", "interpolated", "sparsed",
                           "autoscaled", "no_resulst", "rolling", "cumulative"]
-        
+
         #convert the first 50 bytes to a string to find position of substring WAVEDESC
-        self.posWAVEDESC = fileContent[:50].decode("ascii","replace").index("WAVEDESC")
-        
+        self.posWAVEDESC = self.fileContent[:50].decode("ascii","replace").index("WAVEDESC")
+
         self.commOrder = self.parseInt16(34) #big endian (>) if 0, else little
         self.endianness = [">", "<"][self.commOrder]
-        
+
         self.templateName = self.parseString(16)
         self.commType = self.parseInt16(32) # encodes whether data is stored as 8 or 16bit
 
@@ -94,7 +98,7 @@ class ScopeData(object):
         self.verticalOffset = self.parseFloat(160)
 
         self.nominalBits = self.parseInt16(172)
-        
+
         self.horizInterval = self.parseFloat(176)
         self.horizOffset = self.parseDouble(180)
 
@@ -108,40 +112,36 @@ class ScopeData(object):
         self.verticalCoupling = verticalCouplingList[self.parseInt16(326)]
         self.bandwidthLimit = bandwidthLimitList[self.parseInt16(334)]
         self.waveSource = waveSourceList[self.parseInt16(344)]
-        
 
-        self.file.seek(self.posWAVEDESC + self.waveDescriptor + self.userText
-                       + self.trigTimeArray)
 
+        start = self.posWAVEDESC + self.waveDescriptor + self.userText + self.trigTimeArray
         if self.commType == 0: #data is stored in 8bit integers
-            y = np.fromstring(self.file.read(self.waveArray1), dtype = np.dtype((self.endianness + "i1", self.waveArray1)))[0]
+            y = np.fromstring(self.fileContent[start:start+self.waveArray1], dtype = np.dtype((self.endianness + "i1", self.waveArray1)))[0]
         else: #16 bit integers
             length = self.waveArray1//2
-            y = np.fromstring(self.file.read(self.waveArray1), dtype = np.dtype((self.endianness + "i2", length)))[0]
+            y = np.fromstring(self.fileContent[start:start+self.waveArray1], dtype = np.dtype((self.endianness + "i2", length)))[0]
 
         #now scale the ADC values
         y = self.verticalGain*np.array(y) - self.verticalOffset
-        
+
         x = np.linspace(0, self.waveArrayCount*self.horizInterval,
                              num = self.waveArrayCount) + self.horizOffset
-        
+
         if sparse > 0:
             indices = int(len(x) / sparse) * np.arange(sparse)
 
             x = x[indices]
             y = y[indices]
 
-        self.file.close()
-        del self.file
         return x, y
 
-        
+
     def unpack(self, pos, formatSpecifier, length):
         """ a wrapper that reads binary data
         in a given position in the file, with correct endianness, and returns the parsed
         data as a tuple, according to the format specifier. """
-        self.file.seek(pos + self.posWAVEDESC)
-        x = np.fromstring(self.file.read(length), self.endianness + formatSpecifier)[0]
+        start = pos+self.posWAVEDESC
+        x = np.fromstring(self.fileContent[start:start+length], self.endianness + formatSpecifier)[0]
         return x
     
         
