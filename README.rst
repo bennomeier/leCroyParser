@@ -17,7 +17,7 @@ A useful resource for modifications is the LeCroy Remote Control Manual
 available at
 <http://cdn.teledynelecroy.com/files/manuals/dda-rcm-e10.pdf>
 
-Lecroyparser has been tested with Python 2.7 and Python 3.6
+Lecroyparser has been tested with Python 2.7 and Python 3.6, 3.8
 
 Installation
 ------------
@@ -54,6 +54,7 @@ This will parse all files in the specified folder with a matching
 filename. I.e., if the provided path is as above, then the files
 
 .. code-block:: console
+
    C2180421_typicalShot00000.trc
    C3180421_typicalShot00000.trc
    C4180421_typicalShot00000.trc
@@ -61,7 +62,16 @@ filename. I.e., if the provided path is as above, then the files
 
 will pe parsed as well.
 
-Additionally, it is possible to limit the number of samples in the output array, by overwritting the sparse keyword:
+Next to reading files, it is possible to read a binary buffer/string directly. For this, supply the data argument instead of file:
+
+>>> import lecroyparser
+>>> path = "/home/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421_typicalShot00000.trc"
+>>> contents = open(path, 'rb').read()
+>>> data = lecroyparser.ScopeData(data=contents)
+
+This is especially useful when reading data directly from oscilloscope using python-vx11 or similar software.
+
+Additionally, it is possible to limit the number of samples in the output array, by overwriting the sparse keyword:
 
 >>> data = lecroyparser.ScopeData(path, parseAll = True, sparse = 1000)
 
@@ -70,8 +80,9 @@ will limit the samples in the x and y dimensions to 1000.
 Information about the file can be obtained by calling print(data)
 
 .. code-block:: console
+
     >>> print(data)
-    
+
     Le Croy Scope Data
     Path: /Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421\_typicalShot00000.trc
     Endianness: <
@@ -92,7 +103,7 @@ License
 
 MIT License
 
-Copyright (c) 2018 Benno Meier
+Copyright (c) 2018-2020 Benno Meier, Jeroen van Oorschot
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
