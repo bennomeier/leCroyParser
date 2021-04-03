@@ -84,7 +84,7 @@ Information about the file can be obtained by calling print(data)
     >>> print(data)
 
     Le Croy Scope Data
-    Path: /Users/benno/Dropbox/RESEARCH/bullet/experiments/scopeTraces/201804/C1180421\_typicalShot00000.trc
+    Path: /Users/... 
     Endianness: <
     Instrument: LECROYHDO4104
     Instrunemt Number: 19359
@@ -103,7 +103,7 @@ License
 
 MIT License
 
-Copyright (c) 2018-2020 Benno Meier, Jeroen van Oorschot
+Copyright (c) 2018-2021 Benno Meier, Jeroen van Oorschot
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
