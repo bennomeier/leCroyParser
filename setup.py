@@ -4,7 +4,7 @@ with open('README.rst') as f:
     long_description = f.read()
 
 setup(name='lecroyparser',
-      version='1.4.2',
+      version='1.4.3',
       description='Parse LeCroy Binary Files.',
       long_description=long_description,
       long_description_content_type='text/markdown',
