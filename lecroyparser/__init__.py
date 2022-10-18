@@ -41,7 +41,8 @@ class ScopeData(object):
 
             self.path = path
 
-            if parseAll:
+            if parseAll:                
+                path=path.replace('\\', '/')
                 basePath = "/".join(path.split("/")[:-1])
                 core_filename = path.split("/")[-1][2:]
 
@@ -182,7 +183,7 @@ class ScopeData(object):
     def parseByte(self, pos):
         return self.unpack(pos, "u1", 1)
 
-    def parseTimeStamp(self, pos):
+    def parseTimeStamp(self, pos, secondDigits = 3):
         second = self.parseDouble(pos)
         minute = self.parseByte(pos + 8)
         hour = self.parseByte(pos + 9)
@@ -190,8 +191,10 @@ class ScopeData(object):
         month = self.parseByte(pos + 11)
         year = self.parseWord(pos + 12)
 
-        return "{}-{:02d}-{:02d} {:02d}:{:02d}:{:.2f}".format(year, month, day,
-                                                              hour, minute, second)
+        secondFormat = "{:." + str(secondDigits) + "f}"
+        fullFormat = "{}-{:02d}-{:02d} {:02d}:{:02d}:" + secondFormat
+
+        return fullFormat.format(year, month, day, hour, minute, second)
 
     def parseTimeBase(self, pos):
         """ time base is an integer, and encodes timing information as follows:
