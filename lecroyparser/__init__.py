@@ -25,7 +25,7 @@ import glob
 
 
 class ScopeData(object):
-    def __init__(self, path=None, data=None, parseAll=False, sparse=-1):
+    def __init__(self, path=None, data=None, parseAll=False, sparse=-1, secondDigits = 3):
         """Import Scopedata as stored under path.
 
         If parseAll is set to true, search for all files 
@@ -66,18 +66,18 @@ class ScopeData(object):
 
             assert type(data) == bytes, 'Please supply data as bytes'
             self.path = 'None - from bytes data'  # not reading from a path
-            self.x, self.y = self.parseData(data, sparse)
+            self.x, self.y = self.parseData(data, sparse, secondDigits = secondDigits)
 
-    def parseFile(self, path, sparse=-1):
+    def parseFile(self, path, sparse=-1, secondDigits = 3):
         self.file = open(path, mode='rb')
 
         fileContent = self.file.read()
 
         self.file.close()
         del self.file
-        return self.parseData(data=fileContent, sparse=sparse)
+        return self.parseData(data=fileContent, sparse=sparse, secondDigits = secondDigits)
 
-    def parseData(self, data, sparse):
+    def parseData(self, data, sparse, secondDigits = 3):
         self.data = data
 
         self.endianness = "<"
@@ -122,7 +122,7 @@ class ScopeData(object):
         self.vertUnit = "NOT PARSED"
         self.horUnit = "NOT PARSED"
 
-        self.triggerTime = self.parseTimeStamp(296)
+        self.triggerTime = self.parseTimeStamp(296, secondDigits = secondDigits)
         self.recordType = recordTypeList[self.parseInt16(316)]
         self.processingDone = processingList[self.parseInt16(318)]
         self.timeBase = self.parseTimeBase(324)
