@@ -122,6 +122,8 @@ class ScopeData(object):
         self.vertUnit = "NOT PARSED"
         self.horUnit = "NOT PARSED"
 
+        self.SegmentsInSequence=self.data.parseInt32(144)
+
         self.triggerTime = self.parseTimeStamp(296, secondDigits = secondDigits)
         self.recordType = recordTypeList[self.parseInt16(316)]
         self.processingDone = processingList[self.parseInt16(318)]
