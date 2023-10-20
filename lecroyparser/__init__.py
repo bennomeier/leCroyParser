@@ -193,7 +193,7 @@ class ScopeData(object):
         month = self.parseByte(pos + 11)
         year = self.parseWord(pos + 12)
 
-        secondFormat = "{:." + str(secondDigits) + "f}"
+        secondFormat = "{:0" + str(secondDigits + 3) + "." + str(secondDigits) + "f}"
         fullFormat = "{}-{:02d}-{:02d} {:02d}:{:02d}:" + secondFormat
 
         return fullFormat.format(year, month, day, hour, minute, second)
